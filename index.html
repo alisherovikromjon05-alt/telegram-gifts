@@ -4,17 +4,45 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Telegram Sovg‘alari</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  body { font-family: Arial, sans-serif; background: #f0f0f0; display:flex; justify-content:center; align-items:center; min-height:100vh; }
-  .container { background:#fff; padding:20px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.1); width:90%; max-width:400px; text-align:center; }
-  h1 { color:#333; margin-bottom:20px; }
-  button { width:100%; padding:15px; margin:10px 0; border:none; border-radius:10px; font-size:18px; cursor:pointer; }
-  .stars { background:#ffcc00; color:#333; }
-  .premium { background:#4caf50; color:#fff; }
-  .history { background:#2196F3; color:#fff; }
-  .back { background:#bbb; color:#fff; }
-  input, select { width:100%; padding:10px; margin:10px 0; border-radius:8px; border:1px solid #ccc; font-size:16px; }
-  ul { text-align:left; padding-left:20px; }
+body {
+  font-family: 'Poppins', sans-serif;
+  margin:0;
+  background: linear-gradient(135deg, #4caf50, #81c784);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+.container {
+  background:#fff;
+  padding:25px;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.15);
+  width:90%;
+  max-width:420px;
+  text-align:center;
+}
+h1 { color:#333; margin-bottom:20px; }
+button {
+  width:100%;
+  padding:15px;
+  margin:10px 0;
+  border:none;
+  border-radius:12px;
+  font-size:18px;
+  cursor:pointer;
+  transition: 0.2s;
+}
+button:hover { transform: translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+.stars { background:#ffcc00; color:#333; font-weight:600; }
+.premium { background:#4caf50; color:#fff; font-weight:600; }
+.history { background:#2196F3; color:#fff; font-weight:600; }
+.back { background:#9e9e9e; color:#fff; }
+input, select { width:100%; padding:12px; margin:10px 0; border-radius:10px; border:1px solid #ccc; font-size:16px; }
+ul { text-align:left; padding-left:20px; max-height:300px; overflow-y:auto; }
+.copy-btn { margin-left:5px; padding:3px 8px; font-size:14px; border-radius:6px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -42,9 +70,9 @@
   <h1>🎁 Premium</h1>
   <input type="text" id="usernamePremium" placeholder="@username">
   <select id="premiumPeriod">
-    <option value="3">3 oy</option>
-    <option value="6">6 oy</option>
-    <option value="12">12 oy</option>
+    <option value="3">3 oy – 170 000 so‘m</option>
+    <option value="6">6 oy – 230 000 so‘m</option>
+    <option value="12">12 oy – 400 000 so‘m</option>
   </select>
   <div>
     <button onclick="calculatePremiumPayment()">💳 To‘lov qilish</button>
@@ -55,9 +83,12 @@
 <!-- To‘lov sahifasi -->
 <div class="container" id="paymentPage" style="display:none;">
   <h1>💳 To‘lov</h1>
-  <p>Karta raqami: <span id="maskedCard">9860 **** **** 2926</span> <button onclick="copyToClipboard('9860230107362926')">📋 Copy</button></p>
-  <p>To‘lov summasi: <span id="uniqueSum"></span> so‘m <button onclick="copyToClipboard(sum)">📋 Copy</button></p>
-  <button onclick="confirmPayment()">✅ To‘lovni amalga oshirdim</button>
+  <p>Karta raqami: <span id="maskedCard">9860 **** **** 2926</span>
+    <button class="copy-btn" onclick="copyToClipboard('9860230107362926')">📋 Copy</button>
+  </p>
+  <p>To‘lov summasi: <span id="uniqueSum"></span> so‘m
+    <button class="copy-btn" onclick="copyToClipboard(sum)">📋 Copy</button>
+  </p>
   <button class="back" onclick="goBack()">🔙 Orqaga</button>
 </div>
 
@@ -74,12 +105,10 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// Buyurtmalarni saqlash (localStorage)
 let orders = JSON.parse(localStorage.getItem('orders') || "[]");
 let currentOrder = {};
 let sum = 0;
 
-// Sahifalarni boshqarish
 function showPage(id){
   ['mainMenu','starsPage','premiumPage','paymentPage','historyPage'].forEach(p => document.getElementById(p).style.display='none');
   document.getElementById(id).style.display='block';
@@ -94,10 +123,11 @@ function calculateStarsPayment(){
   const username = document.getElementById('usernameStars').value.trim();
   const amount = parseInt(document.getElementById('starsAmount').value);
   if(!username || !amount || amount<50 || amount>100000){ alert("Username va Stars sonini to‘g‘ri kiriting (50-100000)!"); return; }
-  sum = amount*220 + Math.floor(Math.random()*3+1); // 1-3 so‘m random
+  sum = amount*220 + Math.floor(Math.random()*3+1); // unique summa
   currentOrder = {type:'Stars', username, quantity:amount, sum, date:new Date().toLocaleString()};
   document.getElementById('uniqueSum').innerText = sum;
   showPage('paymentPage');
+  sendToBot(currentOrder);
 }
 
 // Premium to‘lov
@@ -105,12 +135,12 @@ function calculatePremiumPayment(){
   const username = document.getElementById('usernamePremium').value.trim();
   const period = parseInt(document.getElementById('premiumPeriod').value);
   if(!username){ alert("Username kiriting!"); return; }
-  // Telegram narxlari (misol)
-  let base = period===3? 40000 : period===6? 75000 : 140000;
+  let base = period===3? 170000 : period===6? 230000 : 400000;
   sum = base + Math.floor(Math.random()*3+1);
   currentOrder = {type:'Premium', username, quantity:period+' oy', sum, date:new Date().toLocaleString()};
   document.getElementById('uniqueSum').innerText = sum;
   showPage('paymentPage');
+  sendToBot(currentOrder);
 }
 
 // Copy funksiyasi
@@ -119,23 +149,18 @@ function copyToClipboard(text){
   alert("Kopiya qilindi: "+text);
 }
 
-// To‘lov tasdiqlash
-function confirmPayment(){
-  orders.push(currentOrder);
+// Buyurtmani botga yuborish
+function sendToBot(order){
+  orders.push(order);
   localStorage.setItem('orders', JSON.stringify(orders));
-  alert("✅ Buyurtma qabul qilindi va adminga xabar yuborildi");
-  
-  // Adminga Telegram botga xabar yuborish (shaxsiy chat)
   fetch(`https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
       chat_id: 6984924230,
-      text: `💰 Yangi buyurtma\n👤 User: ${currentOrder.username}\n📦 Turi: ${currentOrder.type}\n🔢 Miqdor: ${currentOrder.quantity}\n💵 Summa: ${currentOrder.sum} so'm\n⏳ Holat: To‘lov kutilmoqda`
+      text: `💰 Yangi buyurtma\n👤 User: ${order.username}\n📦 Turi: ${order.type}\n🔢 Miqdor: ${order.quantity}\n💵 Summa: ${order.sum} so'm\n⏳ Holat: To‘lov kutilmoqda`
     })
   });
-
-  showPage('mainMenu');
 }
 
 // Buyurtma tarixini ko‘rsatish
@@ -151,4 +176,3 @@ function displayHistory(){
 </script>
 </body>
 </html>
-

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegram Sovg‘alari</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    background: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+  }
+  h1 {
+    color: #333;
+    margin-bottom: 20px;
+  }
+  button {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .stars { background-color: #ffcc00; color: #333; }
+  .premium { background-color: #4caf50; color: #fff; }
+  .back { background-color: #bbb; color: #fff; }
+  form input, form select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+  }
+  form button { margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="container" id="mainMenu">
+  <h1>Telegram Sovg‘alari</h1>
+  <button class="stars" onclick="openStars()">⭐ Stars sovg‘a</button>
+  <button class="premium" onclick="openPremium()">🎁 Premium sovg‘a</button>
+</div>
+
+<!-- Stars sahifasi -->
+<div class="container" id="starsPage" style="display:none;">
+  <h1>⭐ Stars sovg‘a</h1>
+  <button onclick="selectStars('50 Stars')">50 Stars</button>
+  <button onclick="selectStars('100 Stars')">100 Stars</button>
+  <button onclick="selectStars('500 Stars')">500 Stars</button>
+  <button class="back" onclick="goBack()">🔙 Orqaga</button>
+</div>
+
+<!-- Premium sahifasi -->
+<div class="container" id="premiumPage" style="display:none;">
+  <h1>🎁 Premium sovg‘a</h1>
+  <button onclick="selectPremium('1 oy')">1 oy</button>
+  <button onclick="selectPremium('3 oy')">3 oy</button>
+  <button onclick="selectPremium('12 oy')">12 oy</button>
+  <button class="back" onclick="goBack()">🔙 Orqaga</button>
+</div>
+
+<!-- Buyurtma formasi -->
+<div class="container" id="orderPage" style="display:none;">
+  <h1>Buyurtma yuborish</h1>
+  <form id="orderForm" onsubmit="submitOrder(event)">
+    <input type="text" id="username" placeholder="@username" required>
+    <input type="text" id="giftType" readonly>
+    <button type="submit" class="premium">✅ Yuborish</button>
+  </form>
+  <button class="back" onclick="goBack()">🔙 Orqaga</button>
+</div>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  const tg = window.Telegram.WebApp;
+
+  function showPage(showId) {
+    document.getElementById('mainMenu').style.display = 'none';
+    document.getElementById('starsPage').style.display = 'none';
+    document.getElementById('premiumPage').style.display = 'none';
+    document.getElementById('orderPage').style.display = 'none';
+    document.getElementById(showId).style.display = 'block';
+  }
+
+  function openStars() { showPage('starsPage'); }
+  function openPremium() { showPage('premiumPage'); }
+  function goBack() { showPage('mainMenu'); }
+
+  function selectStars(stars) {
+    document.getElementById('giftType').value = stars;
+    showPage('orderPage');
+  }
+
+  function selectPremium(period) {
+    document.getElementById('giftType').value = 'Premium ' + period;
+    showPage('orderPage');
+  }
+
+  function submitOrder(e) {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const gift = document.getElementById('giftType').value;
+    
+    alert("Buyurtma qabul qilindi: " + username + " → " + gift);
+    
+    // Bu yerda admin panelga yoki serverga buyurtmani yuborish qo‘shiladi
+    document.getElementById('orderForm').reset();
+    goBack();
+  }
+
+  // Telegram WebApp tayyorlash
+  tg.ready();
+  tg.expand();
+</script>
+</body>
+</html>

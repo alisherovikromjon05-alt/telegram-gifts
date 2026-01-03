@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegram Stars & Premium</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  font-family:'Poppins',sans-serif;
+  background:url("https://i.ibb.co/4fQG8vV/background.jpg") center/cover fixed;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+.box{
+  width:92%;
+  max-width:420px;
+  background:rgba(255,255,255,.96);
+  padding:22px;
+  border-radius:22px;
+  box-shadow:0 15px 35px rgba(0,0,0,.25);
+}
+h2{text-align:center;margin-bottom:18px}
+
+.card{
+  padding:22px;
+  border-radius:20px;
+  color:#fff;
+  font-size:20px;
+  font-weight:600;
+  margin:14px 0;
+  cursor:pointer;
+  transition:.25s;
+}
+.card:hover{transform:translateY(-4px)}
+.stars{background:linear-gradient(135deg,#f7971e,#ffd200);color:#333}
+.premium{background:linear-gradient(135deg,#7F00FF,#E100FF)}
+.history{background:linear-gradient(135deg,#2196f3,#21cbf3)}
+
+input,select{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid #ccc;
+  margin:10px 0;
+  font-size:16px;
+}
+
+.green{
+  background:#00c853;
+  color:white;
+  padding:15px;
+  border:none;
+  border-radius:16px;
+  font-size:17px;
+  font-weight:600;
+  display:none;
+}
+
+.copy{
+  padding:6px 10px;
+  border-radius:8px;
+  border:none;
+  cursor:pointer;
+}
+
+.ok{background:#2196f3;color:#fff;padding:14px;border-radius:14px;border:none}
+.paid{
+  background:linear-gradient(135deg,#00c6ff,#0072ff);
+  color:#fff;
+  padding:15px;
+  border-radius:16px;
+  border:none;
+  font-size:16px;
+  display:none;
+}
+
+.back{background:#9e9e9e;color:#fff;padding:13px;border-radius:14px;border:none;margin-top:10px}
+
+.history-item{
+  background:#f4f6f8;
+  padding:14px;
+  border-radius:14px;
+  margin:10px 0;
+  box-shadow:0 5px 12px rgba(0,0,0,.08);
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- MAIN -->
+<div class="box" id="main">
+<h2>Telegram Sovg‘alari</h2>
+<div class="card stars" onclick="openStars()">⭐ Stars</div>
+<div class="card premium" onclick="openPremium()">👑 Premium</div>
+<div class="card history" onclick="openHistory()">📜 Buyurtmalar</div>
+</div>
+
+<!-- STARS -->
+<div class="box" id="stars" style="display:none">
+<h2>⭐ Stars</h2>
+<input id="sUser" placeholder="@username" oninput="checkStars()">
+<input id="sCount" type="number" placeholder="Stars (50-100000)" oninput="checkStars()">
+<button class="green" id="starsPay" onclick="payStars()">💳 To‘lov qilish</button>
+<button class="back" onclick="back()">⬅ Orqaga</button>
+</div>
+
+<!-- PREMIUM -->
+<div class="box" id="premiumBox" style="display:none">
+<h2>👑 Premium</h2>
+<input id="pUser" placeholder="@username" oninput="checkPremium()">
+<select id="pMonth" onchange="checkPremium()">
+<option value="">Muddat tanlang</option>
+<option value="3">3 oy – 170 000</option>
+<option value="6">6 oy – 230 000</option>
+<option value="12">12 oy – 400 000</option>
+</select>
+<button class="green" id="premiumPay" onclick="payPremium()">💳 To‘lov qilish</button>
+<button class="back" onclick="back()">⬅ Orqaga</button>
+</div>
+
+<!-- PAYMENT -->
+<div class="box" id="payment" style="display:none">
+<h2>💳 To‘lov</h2>
+
+<p>💳 9860 **** **** 2926
+<button class="copy" onclick="copy('9860230107362926')">📋</button></p>
+
+<p>💰 <span id="sum"></span> so‘m
+<button class="copy" onclick="copy(finalSum)">📋</button></p>
+
+<button class="ok" onclick="showPaid()">✅ OK</button>
+<button class="paid" id="paidBtn" onclick="goAdmin()">📤 To‘lov qildim</button>
+<button class="back" onclick="back()">⬅ Orqaga</button>
+</div>
+
+<!-- HISTORY -->
+<div class="box" id="historyBox" style="display:none">
+<h2>📜 Buyurtmalar</h2>
+<div id="historyList"></div>
+<button class="back" onclick="back()">⬅ Orqaga</button>
+</div>
+
+<script>
+let orders = JSON.parse(localStorage.getItem("orders")||"[]");
+let currentUser="",product="",finalSum=0;
+
+function show(id){
+["main","stars","premiumBox","payment","historyBox"].forEach(x=>document.getElementById(x).style.display="none");
+document.getElementById(id).style.display="block";
+}
+function back(){show("main")}
+function openStars(){show("stars")}
+function openPremium(){show("premiumBox")}
+function openHistory(){show("historyBox");drawHistory()}
+
+function checkStars(){
+starsPay.style.display = sUser.value && sCount.value>=50 ? "block":"none";
+}
+function payStars(){
+currentUser=sUser.value;
+product="Stars "+sCount.value;
+finalSum=sCount.value*220 + Math.floor(Math.random()*3+1);
+save();
+sum.innerText=finalSum;
+show("payment");
+}
+
+function checkPremium(){
+premiumPay.style.display = pUser.value && pMonth.value ? "block":"none";
+}
+function payPremium(){
+currentUser=pUser.value;
+product="Premium "+pMonth.value+" oy";
+let base=pMonth.value==3?170000:pMonth.value==6?230000:400000;
+finalSum=base+Math.floor(Math.random()*3+1);
+save();
+sum.innerText=finalSum;
+show("payment");
+}
+
+function save(){
+orders.push({user:currentUser,product,finalSum,time:new Date().toLocaleString()});
+localStorage.setItem("orders",JSON.stringify(orders));
+}
+
+function showPaid(){paidBtn.style.display="block"}
+
+function goAdmin(){
+const text=`To‘lov qilindi ✅
+User: ${currentUser}
+Xizmat: ${product}
+Summa: ${finalSum} so‘m
+
+Chek rasmini yuboraman 👇`;
+window.open("https://t.me/ikromjon_c?text="+encodeURIComponent(text),"_blank");
+}
+
+function copy(t){navigator.clipboard.writeText(t)}
+
+function drawHistory(){
+historyList.innerHTML="";
+orders.forEach(o=>{
+historyList.innerHTML+=`
+<div class="history-item">
+<b>${o.product}</b><br>
+👤 ${o.user}<br>
+💰 ${o.finalSum} so‘m<br>
+⏰ ${o.time}
+</div>`;
+});
+}
+</script>
+
+</body>
+</html>
+

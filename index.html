@@ -5,128 +5,150 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Telegram Sovg‘alari</title>
 <style>
-  body {
-    font-family: 'Arial', sans-serif;
-    background: #f0f0f0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-  }
-  .container {
-    background: #fff;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-  }
-  h1 {
-    color: #333;
-    margin-bottom: 20px;
-  }
-  button {
-    width: 100%;
-    padding: 15px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 10px;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .stars { background-color: #ffcc00; color: #333; }
-  .premium { background-color: #4caf50; color: #fff; }
-  .back { background-color: #bbb; color: #fff; }
-  form input, form select {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-  }
-  form button { margin-top: 10px; }
+  body { font-family: Arial, sans-serif; background: #f0f0f0; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  .container { background:#fff; padding:20px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.1); width:90%; max-width:400px; text-align:center; }
+  h1 { color:#333; margin-bottom:20px; }
+  button { width:100%; padding:15px; margin:10px 0; border:none; border-radius:10px; font-size:18px; cursor:pointer; }
+  .stars { background:#ffcc00; color:#333; }
+  .premium { background:#4caf50; color:#fff; }
+  .history { background:#2196F3; color:#fff; }
+  .back { background:#bbb; color:#fff; }
+  input, select { width:100%; padding:10px; margin:10px 0; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+  ul { text-align:left; padding-left:20px; }
 </style>
 </head>
 <body>
+
 <div class="container" id="mainMenu">
   <h1>Telegram Sovg‘alari</h1>
-  <button class="stars" onclick="openStars()">⭐ Stars sovg‘a</button>
-  <button class="premium" onclick="openPremium()">🎁 Premium sovg‘a</button>
+  <button class="stars" onclick="openStars()">⭐ Stars</button>
+  <button class="premium" onclick="openPremium()">🎁 Premium</button>
+  <button class="history" onclick="openHistory()">📜 Buyurtma tarixi</button>
 </div>
 
-<!-- Stars sahifasi -->
+<!-- Stars bo‘limi -->
 <div class="container" id="starsPage" style="display:none;">
-  <h1>⭐ Stars sovg‘a</h1>
-  <button onclick="selectStars('50 Stars')">50 Stars</button>
-  <button onclick="selectStars('100 Stars')">100 Stars</button>
-  <button onclick="selectStars('500 Stars')">500 Stars</button>
+  <h1>⭐ Stars</h1>
+  <input type="text" id="usernameStars" placeholder="@username">
+  <input type="number" id="starsAmount" placeholder="Stars soni (min 50)" min="50" max="100000">
+  <div>
+    <button onclick="calculateStarsPayment()">💳 To‘lov qilish</button>
+  </div>
   <button class="back" onclick="goBack()">🔙 Orqaga</button>
 </div>
 
-<!-- Premium sahifasi -->
+<!-- Premium bo‘limi -->
 <div class="container" id="premiumPage" style="display:none;">
-  <h1>🎁 Premium sovg‘a</h1>
-  <button onclick="selectPremium('1 oy')">1 oy</button>
-  <button onclick="selectPremium('3 oy')">3 oy</button>
-  <button onclick="selectPremium('12 oy')">12 oy</button>
+  <h1>🎁 Premium</h1>
+  <input type="text" id="usernamePremium" placeholder="@username">
+  <select id="premiumPeriod">
+    <option value="3">3 oy</option>
+    <option value="6">6 oy</option>
+    <option value="12">12 oy</option>
+  </select>
+  <div>
+    <button onclick="calculatePremiumPayment()">💳 To‘lov qilish</button>
+  </div>
   <button class="back" onclick="goBack()">🔙 Orqaga</button>
 </div>
 
-<!-- Buyurtma formasi -->
-<div class="container" id="orderPage" style="display:none;">
-  <h1>Buyurtma yuborish</h1>
-  <form id="orderForm" onsubmit="submitOrder(event)">
-    <input type="text" id="username" placeholder="@username" required>
-    <input type="text" id="giftType" readonly>
-    <button type="submit" class="premium">✅ Yuborish</button>
-  </form>
+<!-- To‘lov sahifasi -->
+<div class="container" id="paymentPage" style="display:none;">
+  <h1>💳 To‘lov</h1>
+  <p>Karta raqami: <span id="maskedCard">9860 **** **** 2926</span> <button onclick="copyToClipboard('9860230107362926')">📋 Copy</button></p>
+  <p>To‘lov summasi: <span id="uniqueSum"></span> so‘m <button onclick="copyToClipboard(sum)">📋 Copy</button></p>
+  <button onclick="confirmPayment()">✅ To‘lovni amalga oshirdim</button>
+  <button class="back" onclick="goBack()">🔙 Orqaga</button>
+</div>
+
+<!-- Buyurtma tarixi -->
+<div class="container" id="historyPage" style="display:none;">
+  <h1>📜 Buyurtma tarixi</h1>
+  <ul id="orderHistory"></ul>
   <button class="back" onclick="goBack()">🔙 Orqaga</button>
 </div>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
-  const tg = window.Telegram.WebApp;
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
 
-  function showPage(showId) {
-    document.getElementById('mainMenu').style.display = 'none';
-    document.getElementById('starsPage').style.display = 'none';
-    document.getElementById('premiumPage').style.display = 'none';
-    document.getElementById('orderPage').style.display = 'none';
-    document.getElementById(showId).style.display = 'block';
-  }
+// Buyurtmalarni saqlash (localStorage)
+let orders = JSON.parse(localStorage.getItem('orders') || "[]");
+let currentOrder = {};
+let sum = 0;
 
-  function openStars() { showPage('starsPage'); }
-  function openPremium() { showPage('premiumPage'); }
-  function goBack() { showPage('mainMenu'); }
+// Sahifalarni boshqarish
+function showPage(id){
+  ['mainMenu','starsPage','premiumPage','paymentPage','historyPage'].forEach(p => document.getElementById(p).style.display='none');
+  document.getElementById(id).style.display='block';
+}
+function openStars(){ showPage('starsPage'); }
+function openPremium(){ showPage('premiumPage'); }
+function openHistory(){ showPage('historyPage'); displayHistory(); }
+function goBack(){ showPage('mainMenu'); }
 
-  function selectStars(stars) {
-    document.getElementById('giftType').value = stars;
-    showPage('orderPage');
-  }
+// Stars to‘lov
+function calculateStarsPayment(){
+  const username = document.getElementById('usernameStars').value.trim();
+  const amount = parseInt(document.getElementById('starsAmount').value);
+  if(!username || !amount || amount<50 || amount>100000){ alert("Username va Stars sonini to‘g‘ri kiriting (50-100000)!"); return; }
+  sum = amount*220 + Math.floor(Math.random()*3+1); // 1-3 so‘m random
+  currentOrder = {type:'Stars', username, quantity:amount, sum, date:new Date().toLocaleString()};
+  document.getElementById('uniqueSum').innerText = sum;
+  showPage('paymentPage');
+}
 
-  function selectPremium(period) {
-    document.getElementById('giftType').value = 'Premium ' + period;
-    showPage('orderPage');
-  }
+// Premium to‘lov
+function calculatePremiumPayment(){
+  const username = document.getElementById('usernamePremium').value.trim();
+  const period = parseInt(document.getElementById('premiumPeriod').value);
+  if(!username){ alert("Username kiriting!"); return; }
+  // Telegram narxlari (misol)
+  let base = period===3? 40000 : period===6? 75000 : 140000;
+  sum = base + Math.floor(Math.random()*3+1);
+  currentOrder = {type:'Premium', username, quantity:period+' oy', sum, date:new Date().toLocaleString()};
+  document.getElementById('uniqueSum').innerText = sum;
+  showPage('paymentPage');
+}
 
-  function submitOrder(e) {
-    e.preventDefault();
-    const username = document.getElementById('username').value;
-    const gift = document.getElementById('giftType').value;
-    
-    alert("Buyurtma qabul qilindi: " + username + " → " + gift);
-    
-    // Bu yerda admin panelga yoki serverga buyurtmani yuborish qo‘shiladi
-    document.getElementById('orderForm').reset();
-    goBack();
-  }
+// Copy funksiyasi
+function copyToClipboard(text){
+  navigator.clipboard.writeText(text);
+  alert("Kopiya qilindi: "+text);
+}
 
-  // Telegram WebApp tayyorlash
-  tg.ready();
-  tg.expand();
+// To‘lov tasdiqlash
+function confirmPayment(){
+  orders.push(currentOrder);
+  localStorage.setItem('orders', JSON.stringify(orders));
+  alert("✅ Buyurtma qabul qilindi va adminga xabar yuborildi");
+  
+  // Adminga Telegram botga xabar yuborish (shaxsiy chat)
+  fetch(`https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      chat_id: 6984924230,
+      text: `💰 Yangi buyurtma\n👤 User: ${currentOrder.username}\n📦 Turi: ${currentOrder.type}\n🔢 Miqdor: ${currentOrder.quantity}\n💵 Summa: ${currentOrder.sum} so'm\n⏳ Holat: To‘lov kutilmoqda`
+    })
+  });
+
+  showPage('mainMenu');
+}
+
+// Buyurtma tarixini ko‘rsatish
+function displayHistory(){
+  const ul = document.getElementById('orderHistory');
+  ul.innerHTML='';
+  orders.forEach(o=>{
+    const li = document.createElement('li');
+    li.innerText=`${o.date} | ${o.username} | ${o.type} | ${o.quantity} | ${o.sum} so'm`;
+    ul.appendChild(li);
+  });
+}
 </script>
 </body>
 </html>
+
